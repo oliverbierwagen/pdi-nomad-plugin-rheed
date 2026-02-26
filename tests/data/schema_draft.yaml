@@ -54,7 +54,7 @@ RHEEDMeasurement (inherits Measurement):
     # 
 
     substrate_holder:
-      rotation_angle_alpha_deg: float          #deg
+      rotation_angle_alpha_deg: float          #deg currently user provided, as soon as we successfully log the sample rotation, the value can be pulled from the log data of the growth process!
       position_measured: string      # to be matched to position name of the used holder which can be pulled from the MBEExperiment
     sample: 
       sample_reference: reference to sample    # can be derived from position_measured and MBEExperiment sample ID = MBEExperimentID_PositionNameOnHolder
