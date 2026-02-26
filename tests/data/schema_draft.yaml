@@ -6,13 +6,14 @@ RHEEDMeasurement (inherits Measurement):
   operator: string?                  # optional (or rely on NOMAD authors)
   instruments: [InstrumentReference] # base Measurement field (include used instrument entry)
   sample: reference to sample , default is the sample in the center of the sample holder, can be pulled from the Experiment class which i s in the filledsubstaterholder --- perhaps define furhter down ...
+
 # begin inserted by Oliver #
   measurement_settings:
     chamber_geometry:
       distance_sample_to_screen_mm: float
     camera:
       image_length_calibration_mm_per_px: float
-
+# STAIB and FUG are different companies
     e-gun_STAIB:
       electron_energy_keV: float
       emission_current_uA: float
@@ -37,8 +38,8 @@ RHEEDMeasurement (inherits Measurement):
       alignment_x: float
       alignment_y: float
       magnet_lens: float
-      x_or_y_scan: x or y
-      ext_or_int_ref: ext or int
+      x_or_y_scan: "x" or "y"
+      ext_or_int_ref: "ext" or "int"
       beam_deflection_x_coarse: float         # unit not specified
       beam_deflection_x_fine: float         # unit not specified
       beam_deflection_x_crosspoint: float         # unit not specified
@@ -49,15 +50,19 @@ RHEEDMeasurement (inherits Measurement):
       beam_deflection_y_angle: float         # unit not specified
       
     compensation_cage_on: bool
-    incidence_angle_deg: float?
+    incidence_angle_deg: float?  # may be derived from RHEED images by user-provided counting pixel distance from shadow edge to specular reflection and use distance_sample_to_screen_mm and image_length_calibration_mm_per_px
+    # 
 
     substrate_holder:
-      rotation_angle: float          #deg
+      rotation_angle_alpha_deg: float          #deg
       position_measured: string      # to be matched to position name of the used holder which can be pulled from the MBEExperiment
     sample: 
       sample_reference: reference to sample    # can be derived from position_measured and MBEExperiment sample ID = MBEExperimentID_PositionNameOnHolder
       sample_id: string # pulled from sample reference
-      sample_azimuth_phi_deg: float # rheed beam direction relative to specified reference direction on substrate,   user adds this manually, not derived from the video
+      sample_phi_holder_alpha_deg: float # fixed offset of sample azimuth phi to holder rotation angle in deg
+      sample_azimuth_phi_deg: float # rheed beam direction relative to reference direction of substrate, can be calculated: = sample_phi_holder_alpha_deg + rotation_angle_alpha_deg
+      substrate_or_film : "substrate" or "film" # may be also pulled later from the layerstack/steps objects assigned to the growth run 
+      sample_surface_compound: chemical_formula # user specified what is measured, i.e., substate Al2O3 or film Ga2O3, so the azimuth crystalline directions make sense  may be user entered or pulled later from layer structure definition
       sample_azimuth_uvw: u v w  # 3 integers indexing real space direction,   user adds this manually, not derived from the video
       sample_azimuth_hkl: h k l  # 3 integers indexing reciprocal space direction,   user adds this manually, not derived from the video
       
@@ -80,18 +85,19 @@ RHEEDMeasurement (inherits Measurement):
         sample:
 
     - RHEEDPointScanResult (RHEEDResult):
+        
         point_scans: [PointScan, ...]
         start_time:
         end_time:
 
 PointScan:
-  source_file: file                  # .asc and/or .csv
+  source_file: file                  # .asc and/or .csv - both extensions fine, both have same ascii format (columns separeted by multiple spaces ascii 0x20)
   start_time: datetime?
   end_time: datetime?
-  sensor_position_overview_picture: file?
+  sensor_position_overview_picture: tif-file
+  sensor_definition_file : .sn file
   derived_from_video_link: url?
   sensors:
-    - name: string
-      position_label: string?
-      time: array
+      name: string # sensor 1, sensor 2, ...
+      time: array # all sensors share same time array! It should be possible to align all times from RHEED with times from GrowthProcess, such that we can produce common plots of process paramters and in-situ results.
       intensity: array
